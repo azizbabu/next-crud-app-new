@@ -1,0 +1,8 @@
+{
+    "HomePage": {
+        "welcome": "Welcome to My App!",
+        "country_list": "Country List",
+        "user_list": "User List",
+        "post_list": "Post List"
+    }
+}

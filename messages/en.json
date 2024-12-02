@@ -1,0 +1,11 @@
+{
+  "globalTrans": {
+    "en": "English",
+    "bn": "বাংলা"
+  },
+  "LocaleSwitcher": {
+    "bn": "বাংলা",
+    "en": "English",
+    "label": "Language"
+  }
+}
