@@ -7,6 +7,8 @@ import Link from 'next/link';
 import CustomButton from '@/app/components/CustomButton';
 import { UploadOutlined } from '@ant-design/icons';
 import moment from 'moment'
+import { useSelector } from 'react-redux';
+import { selectCommon } from '@/store/store';
 const { Title } = Typography;
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -23,6 +25,12 @@ const Users = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [form] = Form.useForm();
 
+  let { countryList } = useSelector(selectCommon);
+
+  countryList = countryList.map(item => {
+    return Object.assign({}, item, { label: item.text_en })
+  })
+  console.log('countryList 2', countryList)
   // Fetching users
   const fetchData = () => {
     setLoading(true);
@@ -324,10 +332,12 @@ const Users = () => {
             label="Country"
             rules={[{ required: true, message: 'Please select country!' }]}
           >
-            <Select>
-              {/* Replace with dynamic country list */}
-              <Select.Option value="1">Country 1</Select.Option>
-              <Select.Option value="2">Country 2</Select.Option>
+            <Select placeholder="Select a post">
+              {countryList.map((obj) => (
+              <Select.Option key={obj.value} value={obj.value}>
+                {obj.label}
+              </Select.Option>
+              ))}
             </Select>
           </Form.Item>
         </Form>
