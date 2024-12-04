@@ -1,6 +1,9 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Table, Popconfirm, Button, Flex, Typography, Modal, Form, Input, DatePicker, Select, Upload, message } from 'antd';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+dayjs.extend(customParseFormat);
 import axios from 'axios';
 import qs from 'qs';
 import Link from 'next/link';
@@ -11,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { selectCommon } from '@/store/store';
 const { Title } = Typography;
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+let currentDate = new Date().toISOString().slice(0, 10)
 
 const Users = () => {
   const [data, setData] = useState([]);
@@ -82,6 +86,7 @@ const Users = () => {
         mobile: user.mobile,
         birth_date: user.birth_date ? moment(user.birth_date) : null,
         country_id: user.country_id,
+        photo: user.photo,
       });
     } else {
       setCurrentUser(null);
@@ -325,6 +330,13 @@ const Users = () => {
             >
               <Button icon={<UploadOutlined />}>Upload</Button>
             </Upload>
+            {currentUser && currentUser.photo ? (
+              <img 
+              src={`${API_BASE_URL}/download-attachment?file=${currentUser.photo}`} 
+              alt="User profile" 
+              width="70"
+            />
+            ) : ('')}
           </Form.Item>
 
           <Form.Item
