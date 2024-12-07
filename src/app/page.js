@@ -6,7 +6,7 @@ import Link from 'next/link'
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCountryList, setPostList } from '@/store/commonSlice';
-import { selectCommon } from '@/store/store';
+import { selectCommon } from '@/store';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {

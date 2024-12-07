@@ -8,7 +8,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Initial state for posts
 const initialState = {
-  posList: [],
+  postList: [],
   loading: false,
   error: null,
 };
