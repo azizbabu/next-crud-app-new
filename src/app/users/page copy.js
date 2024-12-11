@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, useRef } from 'react';
-import { Table, Popconfirm, Button, Flex, Typography, Modal, message } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Table, Popconfirm, Button, Flex, Typography, Modal, Form, Input, DatePicker, Select, Upload, message } from 'antd';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
@@ -12,7 +12,6 @@ import { UploadOutlined } from '@ant-design/icons';
 import moment from 'moment'
 import { useSelector } from 'react-redux';
 import { selectCommon } from '@/store';
-import AppForm from './AppForm'
 const { Title } = Typography;
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 let currentDate = new Date().toISOString().slice(0, 10)
@@ -20,7 +19,6 @@ let currentDate = new Date().toISOString().slice(0, 10)
 const Users = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);  // State to control form submission loading
   const [tableParams, setTableParams] = useState({
     pagination: {
       current: 1,
@@ -29,9 +27,7 @@ const Users = () => {
   });
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-
-   // Create a ref for the form
-   const formRef = useRef();
+  const [form] = Form.useForm();
 
   let { countryList } = useSelector(selectCommon);
 
@@ -80,13 +76,29 @@ const Users = () => {
 
   // Open the modal (for create or edit)
   const openModal = (user = null) => {
-    setCurrentUser(user);
+    if (user) {
+      setCurrentUser(user);
+      form.setFieldsValue({
+        name_en: user.name_en,
+        name_bn: user.name_bn,
+        email: user.email,
+        username: user.username,
+        mobile: user.mobile,
+        birth_date: user.birth_date ? moment(user.birth_date) : null,
+        country_id: user.country_id,
+        photo: user.photo,
+      });
+    } else {
+      setCurrentUser(null);
+      form.resetFields();
+    }
     setIsModalVisible(true);
   };
 
   // Handle Form Submission
   const handleFormSubmit = async (values) => {
-    setFormLoading(true);  // Show loading when form is submitting
+    console.log('values', values)
+    
     const formData = { ...values, birth_date: moment(values.birth_date).format("YYYY-MM-DD") }; // Handle photo later
     
     // If editing, send update request
@@ -103,8 +115,6 @@ const Users = () => {
         
       } catch (err) {
         message.error('Failed to update user');
-      } finally {
-        setFormLoading(false);  // Hide loading after form submission finishes
       }
     } else {
       // If creating, send create request
@@ -119,8 +129,6 @@ const Users = () => {
         }
       } catch (err) {
         message.error('Failed to create user');
-      } finally {
-        setFormLoading(false);  // Hide loading after form submission finishes
       }
     }
   };
@@ -227,20 +235,125 @@ const Users = () => {
       />
 
       {/* Modal for Create/Edit */}
-      {isModalVisible && (
-        <Modal
-          title={currentUser ? 'Edit User' : 'Create User'}
-          visible={isModalVisible}
-          onCancel={() => setIsModalVisible(false)}
-          onOk={() => formRef.current.submit()}
-          okText="Save"
-          okButtonProps={{
-            loading: formLoading,  // Show loader on submit button
-          }}
+      <Modal
+        title={currentUser ? 'Edit User' : 'Create User'}
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        onOk={() => form.submit()}
+        okText="Save"
+      >
+        <Form
+          form={form}
+          onFinish={handleFormSubmit}
+          layout="vertical"
         >
-          <AppForm currentUser={currentUser} onSubmit={handleFormSubmit} formRef={formRef}/>
-        </Modal>
-      )}
+          <Form.Item
+            name="name_en"
+            label="Name (English)"
+            rules={[{ required: true, message: 'Please input name in English!' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="name_bn"
+            label="Name (Bangla)"
+            rules={[{ required: true, message: 'Please input name in Bangla!' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[{ type: 'email', message: 'Please input a valid email!' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="username"
+            label="Username"
+            rules={[
+              { required: true, message: 'Please input username!' },
+              { pattern: /^[a-zA-Z0-9_]+$/, message: 'Username should be alphanumeric and can contain underscores.' },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="mobile"
+            label="Mobile"
+            rules={[{ required: true, message: 'Please input mobile number!' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="birth_date"
+            label="Birth Date"
+            rules={[{ required: true, message: 'Please input birth date!' }]}
+          >
+            <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
+          </Form.Item>
+
+          <Form.Item
+            name="photo"
+            label="Photo"
+            valuePropName="file"
+            getValueFromEvent={(e) => {
+              if (Array.isArray(e)) {
+                return e;
+              }
+              return e && e.fileList;
+            }}
+            extra="Upload photo (optional)"
+          >
+            <Upload
+              name="photo"
+              listType="picture-card"
+              showUploadList={false}
+              action=""
+              beforeUpload={(file) => {
+                // Convert to base64 before upload
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  form.setFieldsValue({
+                    photo: e.target.result,
+                  });
+                  console.log('e.target.result', e.target.result)
+                };
+                reader.readAsDataURL(file);
+                return false;
+              }}
+            >
+              <Button icon={<UploadOutlined />}>Upload</Button>
+            </Upload>
+            {currentUser && currentUser.photo ? (
+              <img 
+              src={`${API_BASE_URL}/download-attachment?file=${currentUser.photo}`} 
+              alt="User profile" 
+              width="70"
+            />
+            ) : ('')}
+          </Form.Item>
+
+          <Form.Item
+            name="country_id"
+            label="Country"
+            rules={[{ required: true, message: 'Please select country!' }]}
+          >
+            <Select placeholder="Select a post">
+              {countryList.map((obj) => (
+              <Select.Option key={obj.value} value={obj.value}>
+                {obj.label}
+              </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   );
 };
